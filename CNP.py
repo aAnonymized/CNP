@@ -81,7 +81,7 @@ def main():
             state_dict.pop('classifier.bias', None)
         elif configs.general.stage == 'Purification':
             if 'outputs' in configs.model.Purify_pretrained_path:
-                state_dict = torch.load('/public/home/chenweilin/classImbalace-compareMethod/outputs/isic/100_AIBD_None_224_resnet50_False_128_1_strong/Purification_best.pt').state_dict()  
+                state_dict = torch.load(configs.model.Purify_pretrained_path).state_dict()  
             else:
                 state_dict = torch.load(configs.model.Purify_pretrained_path)
         else:
@@ -125,23 +125,6 @@ def main():
     else:
         print(f'Error !! Pls ensure configs.general.stage == [IM | Purification].')
     optimizer = get_optimizer(configs, model)
-    
-    if configs.general.test:
-        ce_model = timm.create_model(model_name=configs.model.model_name, pretrained=configs.model.pretrained, \
-                              num_classes=configs.general.num_classes)
-        state_dict = torch.load(configs.model.Purify_pretrained_path).state_dict() 
-        missing, unexpected = ce_model.load_state_dict(state_dict, strict=False)
-        print(f'load student model from local, missing: {missing}; unexpected: {unexpected}')
-        
-        rn_method.visualize_cam_comparison(
-            student_model=model,
-            inputs=dataloaders["val"],
-            ce_model=ce_model,
-            save_dir="./rni_visualization/cam_ce_vs_purified",
-            max_images=400,
-        )
-        
-        sys.exit(0)
     
     for epoch in range(train_epochs):
         model.train()
