@@ -17,7 +17,7 @@ python CNP.py --config ./config/isic/100/CNP.py
 - The ./config/isic/100/CNP.py `stage='IM'`
 - The ./config/isic/100/CNP.py `method='CNP'` VSLoss, CB, Focal, LEAD ...
 
-### Stage1: Nuisance Purification
+### Stage2: Nuisance Purification
 
 **Training:**
 
