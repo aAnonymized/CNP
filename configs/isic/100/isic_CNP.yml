@@ -5,11 +5,11 @@ general:
   dataset_name: 'isic'
   method: 'CNP' # VSLoss
   num_workers: 16
-  IM_epochs: 100
+  IM_epochs: 50
   Purify_epochs: 20
   beta: 0.5
   stage: 'Purification'  # IM Purification
-  test: True
+  test: False
   
 model:
   if_resume: False
