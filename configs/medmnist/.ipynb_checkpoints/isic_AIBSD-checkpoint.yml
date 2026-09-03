@@ -1,0 +1,62 @@
+general: 
+  img_size: 224
+  seed: 1
+  num_classes: '@genenral.num_classes'
+  dataset_name: '@genenral.dataset_name'
+  method: 'AIBSD'
+  loss_function: 'BalancedSoftmax' # BalancedSoftmax CBLoss_Focal
+  num_workers: 16
+  train_epochs: 80
+  alpha: 0.01
+  beta: 0.01
+
+model:
+  if_resume: False
+  resume_path: ''
+  if_freeze_encoder: False
+  model_name: resnet50
+  pretrained: False
+  local_pretrained: True
+  pretrained: False
+  local_pretrained: True
+  teacher_local_pretrained_path: '/public/home/chenweilin/classImbalace-compareMethod/outputs/organamnist/10_AIBSD_teacher_224_resnet50_False_64_1_100_strong/best.pt'
+  student_local_pretrained_path: '/public/home/chenweilin/classImbalace-compareMethod/outputs/organamnist/10_AIBSD_teacher_224_resnet50_False_64_1_100_strong/best.pt'
+  
+# '/public/home/chenweilin/classImbalace-compareMethod/outputs/bloodmnist/10_AIBSD_teacher_224_resnet50_False_64_1_100_strong/best.pt'
+# '/public/home/chenweilin/classImbalace-compareMethod/outputs/organamnist/10_AIBSD_teacher_224_resnet50_False_64_1_100_strong/best.pt'
+
+# '/public/home/chenweilin/classImbalace-compareMethod/outputs/dermamnist/10_AIBSD_teacher_224_resnet50_False_128_1_100_strong/best.pt'
+# '/public/home/chenweilin/classImbalace-compareMethod/outputs/tissuemnist/10_AIBSD_teacher_224_resnet50_False_128_1_100_strong/best.pt'
+
+cuda:
+  gpu_id: '0'
+  use_gpu: True
+  multi_gpu: False
+
+optimizer:
+  type: Adam
+  learning_rate: 0.0003
+
+datasets:
+  imbalance_ratio: '@datasets.imbalance_ratio'
+  sampler: None
+  batch_size: 128
+  head: '@datasets.head'
+  medium: '@datasets.medium'
+  tail: '@datasets.tail'
+  teacher_class: '@datasets.teacher_class'
+  img_path: '@datasets.img_path'
+  train:
+    np_path: '@datasets.train.np_path'
+    dict_path: '@datasets.train.dict_path'
+  val:
+    np_path: '@datasets.val.np_path'
+    dict_path: '@datasets.val.dict_path'
+  test:
+    np_path: '@datasets.test.np_path'
+    dict_path: '@datasets.test.dict_path'
+  transforms:
+    train: '@datasets.transforms.train'
+    val_test: '@datasets.transforms.val_test'
+
+
