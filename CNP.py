@@ -29,6 +29,9 @@ from models.KNNClassifier import KNNClassifier
 from losses.balanced_label_informax_loss import DynamicDecodableInfoMaxLoss
 from losses.dual_pattern_relevant_nuisance_resnet import DualPatternResNet
 from utils.get_prior import get_prior
+from utils.cal_margin import compare_gt_competitor_margin
+# from utils.select_nrg import select_nrg_tau_with_banks
+
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -90,12 +93,18 @@ def main():
         print(f'load student model from local, missing: {missing}; unexpected: {unexpected}')
     if configs.cuda.use_gpu:
         model = model.cuda()
+        # tau_star = select_nrg_tau_with_banks(
+        #     model=model,
+        #     val_loader=dataloaders['val'],
+        #     prototype_k_factors=[2, 4],
+        #     thresholds=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+        #     verbose=True,
+        # )["best_tau"]
         if configs.general.stage == 'Purification':
             rn_method = DualPatternResNet(
                 num_classes=configs.general.num_classes,
-                prototype_k_factors=[2, 3, 4],
-                temperature=0.07,  # 0.07
-                decision_threshold=0.1,
+                prototype_k_factors=[2, 4],
+                decision_threshold=0.1, # 0.7, 0.6, 0.4
                 class_counts=cls_num_list,
                 clustering_metric="cosine",
             )
@@ -126,6 +135,22 @@ def main():
         print(f'Error !! Pls ensure configs.general.stage == [IM | Purification].')
     optimizer = get_optimizer(configs, model)
     
+<<<<<<< HEAD
+    if configs.general.test:
+        result = rn_method.evaluate_bank_nuisance_removal(
+            student_model=model,
+            inputs=dataloaders["test"],
+            save_dir="./bank_remove_n_test",
+            verbose=True,
+        )
+        summary = result["summary"]
+        print("移除前准确率：", summary["accuracy_before"])
+        print("移除后准确率：", summary["accuracy_after"])
+        print("提升百分点：", summary["accuracy_gain_pp"])
+        
+        sys.exit(0)
+=======
+>>>>>>> ceff263d8af3a4141e129a2faaede7b864565b65
     for epoch in range(train_epochs):
         model.train()
         train_loader_nums = len(dataloaders['train'].dataset)
@@ -138,10 +163,9 @@ def main():
             labels = Variable(labels.to(device))
             if configs.general.stage == 'Purification':
                 out = rn_method(student_model=model, inputs=inputs, labels=labels)
-                outputs = out.logits
-                train_loss = rn_method.total_loss(output=out, lambda_nuisance=configs.general.beta)
+                outputs = out.output
                 cls_loss = loss_functions['train'](outputs, labels)
-                # train_loss = rn_method.combine_with_classification_loss(classification_loss=cls_loss, output=out) # 用于与其他方法结合；
+                train_loss, nuisance_loss = rn_method.combine_with_classification_loss(classification_loss=cls_loss, lambda_nuisance=configs.general.beta, output=out)
             elif configs.general.stage == 'IM':
                 outputs = model(inputs)
                 train_loss = loss_functions['train'](outputs, labels)
@@ -159,8 +183,7 @@ def main():
         lr = optimizer.param_groups[0]["lr"]
         train_pred = np.argmax(train_probs, axis=1)
         if configs.general.stage == 'Purification':
-            print(f"train acc:{np.sum(train_gt.squeeze() ==train_pred)/train_k}; lr: {lr}; loss_global: {out.loss_global}; \
-            loss_relevant： {out.loss_relevant};  loss_nuisance:{out.loss_nuisance}")
+            print(f"train acc:{np.sum(train_gt.squeeze() ==train_pred)/train_k}; lr: {lr}; train_loss: {train_loss}; nuisance_loss:{nuisance_loss}")
         else:
             print(f"train acc:{np.sum(train_gt.squeeze() ==train_pred)/train_k}; lr: {lr}; train_loss: {train_loss}")
         best_acc, valid_results = eval(dataloaders, model, configs, epoch, loss_functions, best_acc)
@@ -200,7 +223,7 @@ def eval(dataloaders, model, configs, epoch, loss_functions, best_acc):
         print(val_results)
         log_results(configs, val_results)
         
-        if  (epoch+1) >= 5 and current_acc >= best_acc:
+        if  (epoch+1) >= 6 and current_acc >= best_acc:
             # save model.
             print('Best acc: %s, current acc: %s. Saving best model...' %(round(best_acc, 4), round(current_acc, 4)))
             best_acc = current_acc
